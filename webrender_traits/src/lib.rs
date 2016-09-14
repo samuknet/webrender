@@ -14,6 +14,7 @@ extern crate euclid;
 extern crate gleam;
 extern crate heapsize;
 extern crate ipc_channel;
+extern crate layers;
 extern crate offscreen_gl_context;
 extern crate serde;
 

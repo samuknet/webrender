@@ -19,7 +19,7 @@ use tiling::{Clip, FrameBuilder, FrameBuilderConfig, InsideTest};
 use util::MatrixHelpers;
 use webrender_traits::{AuxiliaryLists, PipelineId, Epoch, ScrollPolicy, ScrollLayerId};
 use webrender_traits::{ColorF, StackingContext, FilterOp, MixBlendMode};
-use webrender_traits::{ScrollEventPhase, ScrollLayerInfo, SpecificDisplayItem, ScrollLayerState};
+use webrender_traits::{ScrollEventPhase, ScrollLayerInfo, ScrollLocation, SpecificDisplayItem, ScrollLayerState};
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
@@ -281,10 +281,11 @@ impl Frame {
 
     /// Returns true if any layers actually changed position or false otherwise.
     pub fn scroll(&mut self,
-                  mut delta: Point2D<f32>,
+                  scroll_location: ScrollLocation,
                   cursor: Point2D<f32>,
                   phase: ScrollEventPhase)
                   -> bool {
+
         let root_scroll_layer_id = match self.root_scroll_layer_id {
             Some(root_scroll_layer_id) => root_scroll_layer_id,
             None => return false,
@@ -299,6 +300,20 @@ impl Frame {
         if layer.scrolling.started_bouncing_back && phase == ScrollEventPhase::Move(false) {
             return false
         }
+
+        // Scroll is permitted.
+        let mut delta:Point2D<f32> = match scroll_location {
+            ScrollLocation::Delta(delta) => delta,
+            ScrollLocation::Start => {
+                layer.scrolling.offset.y = 0.0;
+                return true;
+            },
+            ScrollLocation::End => {
+                layer.scrolling.offset.y = -layer.content_size.height +
+                                                 (layer.local_viewport_rect.size.height);
+                return true;
+            },
+        };
 
         let overscroll_amount = layer.overscroll_amount();
         let overscrolling = CAN_OVERSCROLL && (overscroll_amount.width != 0.0 ||

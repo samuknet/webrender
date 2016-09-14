@@ -228,9 +228,9 @@ impl RenderBackend {
 
                             self.publish_frame(frame, &mut profile_counters);
                         }
-                        ApiMsg::Scroll(delta, cursor, move_phase) => {
+                        ApiMsg::Scroll(scroll_location, cursor, move_phase) => {
                             let frame = profile_counters.total_time.profile(|| {
-                                if self.frame.scroll(delta, cursor, move_phase) {
+                                if self.frame.scroll(scroll_location, cursor, move_phase) {
                                     Some(self.render())
                                 } else {
                                     None

@@ -8,8 +8,9 @@
 use app_units::Au;
 #[cfg(feature = "nightly")]
 use core::nonzero::NonZero;
-use euclid::{Matrix4D, Point2D, Rect, Size2D};
+use euclid::{Matrix4D, Point2D, TypedPoint2D, Rect, Size2D};
 use ipc_channel::ipc::{IpcBytesSender, IpcSender};
+use layers::geometry::DevicePixel;
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 
 #[cfg(target_os = "macos")] use core_graphics::font::CGFont;
@@ -44,7 +45,7 @@ pub enum ApiMsg {
                            Vec<(DisplayListId, BuiltDisplayListDescriptor)>,
                            AuxiliaryListsDescriptor),
     SetRootPipeline(PipelineId),
-    Scroll(Point2D<f32>, Point2D<f32>, ScrollEventPhase),
+    Scroll(ScrollLocation, Point2D<f32>, ScrollEventPhase),
     TickScrollingBounce,
     TranslatePointToLayerSpace(Point2D<f32>, IpcSender<(Point2D<f32>, PipelineId)>),
     GetScrollLayerState(IpcSender<Vec<ScrollLayerState>>),
@@ -399,6 +400,13 @@ pub struct ScrollLayerState {
 pub enum ScrollPolicy {
     Scrollable,
     Fixed,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum ScrollLocation {
+    Delta(Point2D<f32>), // Scroll by a certain amount.
+    Start, // Scroll to very top of element.
+    End // Scroll to very bottom of element.
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
